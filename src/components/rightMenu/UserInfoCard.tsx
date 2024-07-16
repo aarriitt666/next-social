@@ -13,11 +13,14 @@ const UserInfoCard = async ({ user }: { user: User }) => {
     month: "long",
     day: "numeric",
   });
+
   let isUserBlocked = false;
   let isFollowing = false;
   let isFollowingSent = false;
+  let isMutualFriend = false;
 
   const { userId: currentUserId } = auth();
+
   if (currentUserId) {
     const blockRes = await prisma.block.findFirst({
       where: {
@@ -25,22 +28,33 @@ const UserInfoCard = async ({ user }: { user: User }) => {
         blockedId: user.id,
       },
     });
-    blockRes ? (isUserBlocked = true) : (isUserBlocked = false);
+    isUserBlocked = !!blockRes;
+
     const followRes = await prisma.follower.findFirst({
       where: {
         followerId: currentUserId,
         followingId: user.id,
       },
     });
-    followRes ? (isFollowing = true) : (isFollowing = false);
+    isFollowing = !!followRes;
+
     const followReqRes = await prisma.followRequest.findFirst({
       where: {
         senderId: currentUserId,
         receiverId: user.id,
       },
     });
-    followReqRes ? (isFollowingSent = true) : (isFollowingSent = false);
+    isFollowingSent = !!followReqRes;
+
+    const mutualFollow = await prisma.follower.findFirst({
+      where: {
+        followerId: user.id,
+        followingId: currentUserId,
+      },
+    });
+    isMutualFriend = isFollowing && !!mutualFollow;
   }
+
   return (
     <div className="p-4 bg-white rounded-lg shadow-md text-sm flex flex-col gap-4">
       {/* TOP */}
@@ -57,7 +71,7 @@ const UserInfoCard = async ({ user }: { user: User }) => {
       {/* BOTTOM */}
       <div className="flex flex-col gap-4 text-gray-500">
         <div className="flex items-center gap-2">
-          <span className="text-xl text-black">{user.name && user.surname ? user.name + " " + user.surname : user.username}</span>
+          <span className="text-xl text-black">{user.name && user.surname ? `${user.name} ${user.surname}` : user.username}</span>
           <span className="text-sm">{user.username}</span>
         </div>
         {user.description && <p>{user.description}</p>}
@@ -97,7 +111,7 @@ const UserInfoCard = async ({ user }: { user: User }) => {
           <Image src="/date.png" alt="" width={16} height={16} />
           <span>Joined {formattedDate}</span>
         </div>
-        {currentUserId && currentUserId !== user.id && <UserInfoCardInteraction userId={user.id} isUserBlocked={isUserBlocked} isFollowing={isFollowing} isFollowingSent={isFollowingSent} />}
+        {currentUserId && currentUserId !== user.id && <UserInfoCardInteraction userId={user.id} isUserBlocked={isUserBlocked} isFollowing={isFollowing} isFollowingSent={isFollowingSent} isMutualFriend={isMutualFriend} />}
       </div>
     </div>
   );

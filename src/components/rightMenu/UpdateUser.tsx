@@ -6,6 +6,7 @@ import Image from "next/image";
 import { updateProfile } from "@/lib/action";
 import { CldUploadWidget } from "next-cloudinary";
 import { useRouter } from "next/navigation";
+import UpdateButton from "./UpdateButton";
 
 const UpdateUser = ({ user }: { user: User }) => {
   const [open, setOpen] = useState(false);
@@ -94,7 +95,7 @@ const UpdateUser = ({ user }: { user: User }) => {
                 <input type="text" placeholder={user.website || "example.com"} className="ring-1 ring-gray-200 p-2 rounded-md text-sm" name="website" />
               </div>
             </div>
-            <button className="bg-blue-500 p-2 mt-4 rounded-md text-white">Update</button>
+            <UpdateButton />
             {state.success && <span className="text-green-500">Profile has been updated!</span>}
             {state.error && <span className="text-red-500">Something has gone wrong!</span>}
             <div className="absolute text-xl right-2 top-2 cursor-pointer" onClick={handleClose}>
