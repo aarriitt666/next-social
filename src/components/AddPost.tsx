@@ -1,27 +1,49 @@
-import prisma from "@/lib/client";
-import { auth } from "@clerk/nextjs/server";
+"use client";
+
+import { useUser } from "@clerk/nextjs";
+import { CldUploadWidget } from "next-cloudinary";
 import Image from "next/image";
+import { useState } from "react";
+import AddPostButton from "./AddPostButton";
+import { addPost } from "@/lib/action";
 const AddPost = () => {
-  const { userId } = auth();
+  const { user, isLoaded } = useUser();
+  if (!isLoaded) return "Loading...";
+  const [desc, setDesc] = useState("");
+  const [img, setImg] = useState<any>();
 
   return (
     <div className="p-4 bg-white shadow-md rounded-lg flex gap-4 justify-between text-sm">
       {/* AVATAR */}
-      <Image src="https://images.pexels.com/photos/26839105/pexels-photo-26839105/free-photo-of-two-vases-on-a-table.jpeg?auto=compress&cs=tinysrgb&w=1200&lazy=load" alt="" width={48} height={48} className="w-12 h-12 object-cover rounded-full" />
+      <Image src={user?.imageUrl || "/noAvatar.png"} alt="" width={48} height={48} className="w-12 h-12 object-cover rounded-full" />
       {/* POST */}
       <div className="flex-1">
         {/* TEXT INPUT */}
-        <form action="" className="flex gap-4">
-          <textarea placeholder="What's on your mind?" className="bg-slate-100 rounded-lg flex-1 p-2" name="desc"></textarea>
-          <Image src="/emoji.png" alt="" width={20} height={20} className="w-5 h-5 cursor-pointer self-end" />
-          <button>Send</button>
+        <form action={(formData) => addPost(formData, img?.secure_url || "")} className="flex gap-4">
+          <textarea placeholder="What's on your mind?" className="bg-slate-100 rounded-lg flex-1 p-2" name="desc" onChange={(e) => setDesc(e.target.value)}></textarea>
+          <div className="">
+            <Image src="/emoji.png" alt="" width={20} height={20} className="w-5 h-5 cursor-pointer self-end" />
+            <AddPostButton />
+          </div>
         </form>
         {/* POST OPTIONS */}
         <div className="flex items-center gap-4 mt-4 text-gray-400 flex-wrap">
-          <div className="flex items-center gap-2 cursor-pointer">
-            <Image src="/addimage.png" alt="" width={20} height={20} />
-            Photo
-          </div>
+          <CldUploadWidget
+            uploadPreset="jiivee"
+            onSuccess={(result, { widget }) => {
+              setImg(result.info);
+              widget.close();
+            }}
+          >
+            {({ open }) => {
+              return (
+                <div className="flex items-center gap-2 cursor-pointer" onClick={() => open()}>
+                  <Image src="/addimage.png" alt="" width={20} height={20} />
+                  Photo
+                </div>
+              );
+            }}
+          </CldUploadWidget>
           <div className="flex items-center gap-2 cursor-pointer">
             <Image src="/addVideo.png" alt="" width={20} height={20} />
             Video

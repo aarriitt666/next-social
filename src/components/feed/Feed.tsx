@@ -42,11 +42,12 @@ const Feed = async ({ username }: { username?: string }) => {
     const followingIds = following.map((f) => f.followingId);
     // Include the authenticated user's own posts
     followingIds.push(userId);
+    const ids = [userId, ...followingIds];
 
     posts = await prisma.post.findMany({
       where: {
         userId: {
-          in: followingIds,
+          in: ids,
         },
       },
       include: {
